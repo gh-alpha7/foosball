@@ -10,7 +10,10 @@ table, and everyone plays with their phone (iPhone or Android) as the controller
 1. On the big screen, open the site and choose **Host on this screen**.
 2. Everyone scans the QR code (or opens the link and types the 4-letter code).
 3. Enter a name and pick **Red** or **Blue**.
-4. Slide on the left half of the phone to move your rods, and tap **KICK** to shoot.
+4. Turn the phone sideways. The **right half** moves your rods: drag up and down.
+   The **left half** shoots: pull your thumb back, then push it forward (or let go).
+   The further you pull, the harder the shot, and a quick tap is a soft touch.
+   Red pulls left and pushes right; Blue is mirrored to match the big screen.
 5. The host presses **Start match**. First to 5 goals wins (3, 7 and 10 are also options).
 
 Rods are shared out automatically within each team:

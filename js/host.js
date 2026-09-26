@@ -76,6 +76,7 @@ var Host = (function () {
     });
     document.addEventListener("pointerdown", unlockAudio, { once: true });
 
+    if (location.hostname === "localhost") window.__fbHost = { rods: function () { return rods; }, ball: function () { return ball; }, tick: function (n) { for (var i = 0; i < (n || 1); i++) step(1 / 60); } };   // dev-only hook for testing
     openRoom();
     renderLobby();
     requestAnimationFrame(frame);
@@ -104,7 +105,7 @@ var Host = (function () {
         x: 58 + k * (W - 116) / 7,
         dir: r.team === "red" ? 1 : -1,
         off: 0, targetOff: 0, vy: 0,
-        kick: 0, kickHit: false,
+        kick: 0, kickHit: false, power: 1, pull: 0, pull0: 0,
         owners: [], label: "",
         bot: { think: 0, cool: 0, aim: 0 }
       };
@@ -112,15 +113,27 @@ var Host = (function () {
   }
 
   function manY(rod, i) { return H / 2 + (i - (rod.men - 1) / 2) * rod.spacing + rod.off; }
+  // Foot offset along x: leans back while the player pulls, then swings through
+  // the ball. Harder shots swing further.
+  var WINDUP = 18;
+  function kickReach(rod) { return KICK_REACH * (0.55 + 0.45 * rod.power); }
   function footDx(rod) {
-    if (rod.kick <= 0) return 0;
+    if (rod.kick <= 0) return -rod.dir * rod.pull * WINDUP;
     var k = 1 - rod.kick / KICK_TIME;
-    return rod.dir * Math.sin(k * Math.PI) * KICK_REACH;
+    return rod.dir * (Math.sin(k * Math.PI) * kickReach(rod) - (1 - k) * rod.pull0 * WINDUP);
   }
   function footVx(rod) {
     if (rod.kick <= 0) return 0;
     var k = 1 - rod.kick / KICK_TIME;
-    return rod.dir * Math.cos(k * Math.PI) * (Math.PI / KICK_TIME) * KICK_REACH;
+    return rod.dir * (Math.cos(k * Math.PI) * Math.PI * kickReach(rod) + rod.pull0 * WINDUP) / KICK_TIME;
+  }
+  function startKick(rod, power) {
+    if (rod.kick > 0) return;
+    rod.kick = KICK_TIME;
+    rod.kickHit = false;
+    rod.power = Math.max(0, Math.min(1, power));
+    rod.pull0 = rod.pull;
+    rod.pull = 0;
   }
 
   /* ---------- networking ---------- */
@@ -220,12 +233,16 @@ var Host = (function () {
         renderLobby(); broadcastLobby();
         break;
       case "in":
-        var v = +msg.p;
+        var v = +msg.p, pl = +msg.pull;
         if (v >= 0 && v <= 1) p.p = v;
+        if (pl >= 0 && pl <= 1) p.pull = pl;
         break;
       case "kick":
+        var power = +msg.power;
+        if (!(power >= 0 && power <= 1)) power = 0.7;
+        p.pull = 0;
         rods.forEach(function (rod) {
-          if (rod.owners.indexOf(p.pid) !== -1 && rod.kick <= 0) { rod.kick = KICK_TIME; rod.kickHit = false; }
+          if (rod.owners.indexOf(p.pid) !== -1) startKick(rod, power);
         });
         break;
       case "leave":
@@ -443,7 +460,9 @@ var Host = (function () {
       // most recently joined owner on a shared rod wins; normally there's just one
       var owner = players[rod.owners[rod.owners.length - 1]];
       rod.targetOff = (owner.p * 2 - 1) * rod.maxOff;
+      if (rod.kick <= 0) rod.pull = owner.pull || 0;
     } else {
+      rod.pull = 0;
       botThink(rod, dt);
     }
     var speed = human ? ROD_SPEED : BOT_SPEED;
@@ -479,7 +498,7 @@ var Host = (function () {
     if (b.cool <= 0 && ahead > -10 && ahead < 36 && phase !== "countdown") {
       for (var j = 0; j < rod.men; j++) {
         if (Math.abs(ball.y - manY(rod, j)) < MAN_H / 2 + 8) {
-          rod.kick = KICK_TIME; rod.kickHit = false;
+          startKick(rod, 0.55 + Math.random() * 0.45);
           b.cool = 0.45 + Math.random() * 0.45;
           break;
         }
@@ -575,7 +594,8 @@ var Host = (function () {
           rod.kickHit = true;
           var aim = Math.max(-1, Math.min(1, (ball.y - my) / (MAN_H / 2)));
           var ang = aim * 0.55 + Math.max(-0.35, Math.min(0.35, rod.vy / 5000));
-          var sp = 980 + Math.random() * 260;
+          // soft tap ~330 px/s, full pull ~1600 px/s
+          var sp = 300 + rod.power * 1250 + Math.random() * 80;
           ball.vx = rod.dir * Math.cos(ang) * sp;
           ball.vy = Math.sin(ang) * sp;
           ball.x = fx + rod.dir * (MAN_W / 2 + BALL_R + 1);

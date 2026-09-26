@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=1" />
+  <link rel="stylesheet" href="css/style.css?v=2" />
 </head>
 <body>
 
@@ -39,7 +39,7 @@
       <ol class="how">
         <li><b>Host</b> on a laptop or TV browser.</li>
         <li><b>Scan</b> the QR code with each phone.</li>
-        <li><b>Slide</b> to move your rods, <b>tap</b> to kick.</li>
+        <li>Phone <b>sideways</b>: right thumb drags your rods, left thumb <b>pulls back and pushes</b> to shoot.</li>
       </ol>
     </div>
   </main>
@@ -149,27 +149,43 @@
         <div class="pad-score mono"><span class="r" id="pad-score-red">0</span>–<span class="b" id="pad-score-blue">0</span></div>
       </header>
       <div class="pad-body">
-        <div class="slider" id="slider" aria-label="Slide up and down to move your rods">
-          <div class="slider-track">
-            <div class="slider-rod"></div>
-            <div class="slider-thumb" id="slider-thumb"><span></span><span></span><span></span></div>
+        <!-- left half: pull back, push forward to shoot -->
+        <div class="zone shoot" id="shoot" aria-label="Pull back and push forward to shoot">
+          <div class="shoot-meter" aria-hidden="true">
+            <div class="shoot-fill" id="shoot-fill"></div>
+            <div class="shoot-ticks"><i></i><i></i><i></i></div>
           </div>
-          <p class="slider-hint mono">slide</p>
+          <div class="shoot-stage" aria-hidden="true">
+            <div class="shoot-man" id="shoot-man"><span class="shoot-head"></span></div>
+            <div class="shoot-ball"></div>
+          </div>
+          <p class="zone-hint mono" id="shoot-hint"><span class="arrow back">◀</span> pull · push <span class="arrow fwd">▶</span></p>
+          <p class="shoot-power mono" id="shoot-power"></p>
         </div>
-        <button class="kick" id="kick" type="button" aria-label="Kick">
-          <span class="kick-ring"></span>
-          <span class="kick-label">KICK</span>
-        </button>
+        <!-- right half: drag up / down to move the rods -->
+        <div class="zone move" id="move" aria-label="Drag up and down to move your rods">
+          <div class="move-track" aria-hidden="true">
+            <div class="move-rod"></div>
+            <div class="move-thumb" id="move-thumb"><span></span><span></span><span></span></div>
+          </div>
+          <p class="zone-hint mono">drag ↕ to move</p>
+        </div>
       </div>
       <p class="pad-msg" id="pad-msg"></p>
+
+      <div class="rotate" id="rotate">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="20" y="8" width="24" height="44" rx="5"/><path d="M50 40a18 18 0 0 1-18 18M47 56l3-5 5 2"/></svg>
+        <p>Turn your phone sideways</p>
+        <p class="mono dim">controls work in landscape</p>
+      </div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-  <script src="js/shared.js?v=1"></script>
-  <script src="js/host.js?v=1"></script>
-  <script src="js/controller.js?v=1"></script>
-  <script src="js/app.js?v=1"></script>
+  <script src="js/shared.js?v=2"></script>
+  <script src="js/host.js?v=2"></script>
+  <script src="js/controller.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
 </body>
 </html>
