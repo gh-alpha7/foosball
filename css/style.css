@@ -432,6 +432,6 @@ button.pad-rods:hover { color: var(--text); }
 @media (max-width: 720px) { .host-foot { padding-right: 110px; } .foot-join { display: none; } }
 
 /* ---------- project like button (js/likes.js) ---------- */
-.home-like { display: flex; justify-content: center; margin-top: -6px; }
+.home-like { display: flex; justify-content: center; gap: 8px; margin-top: -6px; }
 .host-tools { align-items: center; }
 .host-tools .lk-like { height: 42px; border-radius: 12px; }

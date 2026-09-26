@@ -43,8 +43,13 @@
     ".lk-num{grid-area:1/1}" +
     ".lk-num.lk-in{animation:lk-in .35s cubic-bezier(.2,.9,.3,1)}.lk-num.lk-out{animation:lk-out .35s cubic-bezier(.2,.9,.3,1) forwards}" +
     ".lk-count.lk-loading .lk-num{width:2.2ch;height:.8em;margin-top:.22em;border-radius:4px;color:transparent;background:linear-gradient(90deg,#2a3038,#3a424c,#2a3038) 0 0/200% 100%;animation:lk-shim 1.2s linear infinite}" +
-    ".lk-float{position:fixed;z-index:2147483000;top:14px;left:50%;transform:translateX(-50%)}" +
+    ".lk-float{position:fixed;z-index:2147483000;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px}" +
     "@media (max-width:720px){.lk-float{top:auto;left:auto;right:14px;bottom:14px;transform:none}}" +
+    ".lk-home{display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 14px 0 8px;border-radius:999px;" +
+    "border:1px solid rgba(255,255,255,.14);background:rgba(16,20,24,.82);color:#c9d1d9;text-decoration:none;" +
+    "font:600 14px/1 system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:border-color .2s,color .2s}" +
+    ".lk-home:hover,.lk-home:focus-visible{color:#fff;border-color:rgba(8,253,216,.6)}" +
+    ".lk-home svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}" +
     "@keyframes lk-pop{0%{transform:scale(.4)}55%{transform:scale(1.3)}100%{transform:scale(1)}}" +
     "@keyframes lk-ring{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.5);border-width:0}}" +
     "@keyframes lk-dot{0%{opacity:1;transform:rotate(var(--a)) translateY(0) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateY(-17px) scale(.4)}}" +
@@ -65,13 +70,27 @@
         "</defs></svg>");
     }
     if (script && script.dataset.floatKey && !document.querySelector(".lk-float")) {
+      var wrap = document.createElement("div");
+      wrap.className = "lk-float";
+      if (script.dataset.portfolio !== "off") wrap.innerHTML = portfolioLink();
       var f = document.createElement("button");
-      f.className = "lk-like lk-float";
+      f.className = "lk-like";
       f.dataset.likeKey = script.dataset.floatKey;
       f.dataset.likeName = script.dataset.floatName || "this project";
-      document.body.appendChild(f);
+      wrap.appendChild(f);
+      document.body.appendChild(wrap);
     }
+    // any <a class="lk-home"></a> placeholder gets the portfolio link contents
+    Array.prototype.forEach.call(document.querySelectorAll("a.lk-home:empty"), function (a) {
+      a.outerHTML = portfolioLink();
+    });
     scan();
+  }
+
+  var PORTFOLIO = "https://gh-alpha7.github.io/portfolio/#projects";
+  function portfolioLink() {
+    return '<a class="lk-home" href="' + PORTFOLIO + '" title="More projects by Subham">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Portfolio</a>';
   }
 
   // Wire up any buttons not seen yet (safe to call again after the page changes).
