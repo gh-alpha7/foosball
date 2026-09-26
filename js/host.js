@@ -137,7 +137,9 @@ var Host = (function () {
       watchUrl = base + "?watch=" + code;
       el.roomCode.textContent = code;
       el.joinUrl.textContent = joinUrl.replace(/^https?:\/\//, "");
-      drawQr(joinUrl);
+      Table.drawQr(el.qr, joinUrl);
+      Table.drawQr(document.getElementById("qr-watch-lobby"), watchUrl);
+      Table.fillWatchStrip(code);
       setNet("ok", "ready for players");
       renderWatchers();
     });
@@ -159,13 +161,6 @@ var Host = (function () {
   function setNet(cls, text) {
     el.net.className = "net-status " + cls;
     el.net.innerHTML = '<span class="dot"></span> ' + FB.escapeHtml(text);
-  }
-
-  function drawQr(url) {
-    var qr = qrcode(0, "M");
-    qr.addData(url);
-    qr.make();
-    el.qr.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
   }
 
   function onConnection(conn) {

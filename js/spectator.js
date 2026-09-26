@@ -31,6 +31,7 @@ var Spectator = (function () {
     document.title = "Foosball Party · Watching " + code;
 
     view = Table.createView(document.getElementById("table"), document.getElementById("table-wrap"));
+    Table.fillWatchStrip(code);   // so spectators can pass the match on too
     rods = Table.rodLayout();
 
     document.getElementById("btn-full").addEventListener("click", Table.toggleFullscreen);

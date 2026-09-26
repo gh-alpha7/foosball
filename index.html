@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
 </head>
 <body>
 
@@ -73,6 +73,19 @@
       <div class="spec-pill" id="spec-pill" hidden></div>
     </div>
 
+    <!-- always-visible strip so people can start watching mid-match -->
+    <footer class="host-foot" id="host-foot">
+      <div class="qr qr-sm" id="qr-watch" aria-label="QR code to watch this match"></div>
+      <div class="foot-text">
+        <p class="foot-title">👀 Scan to watch</p>
+        <p class="foot-url mono" id="foot-watch-url">…</p>
+      </div>
+      <div class="foot-join">
+        <p class="mono dim">play · room code</p>
+        <p class="foot-code mono" id="foot-code">····</p>
+      </div>
+    </footer>
+
     <!-- lobby overlay -->
     <section class="lobby" id="lobby">
       <div class="lobby-card">
@@ -84,7 +97,10 @@
             <p class="mono dim">room code</p>
             <p class="room-code" id="room-code">····</p>
             <p class="net-status" id="net-status"><span class="dot"></span> connecting…</p>
-            <p class="watch-line" id="watch-line"></p>
+            <div class="watch-row">
+              <div class="qr qr-xs" id="qr-watch-lobby" aria-label="QR code to watch"></div>
+              <p class="watch-line" id="watch-line"></p>
+            </div>
           </div>
         </div>
         <div class="lobby-teams">
@@ -204,11 +220,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-  <script src="js/shared.js?v=4"></script>
-  <script src="js/table.js?v=4"></script>
-  <script src="js/host.js?v=4"></script>
-  <script src="js/spectator.js?v=4"></script>
-  <script src="js/controller.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
+  <script src="js/shared.js?v=5"></script>
+  <script src="js/table.js?v=5"></script>
+  <script src="js/host.js?v=5"></script>
+  <script src="js/spectator.js?v=5"></script>
+  <script src="js/controller.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>

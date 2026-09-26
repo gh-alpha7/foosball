@@ -273,12 +273,29 @@ var Table = (function () {
     else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
   }
 
-  var PHASE_LABELS = { lobby: "Lobby · warm-up", countdown: "Get ready", play: "Live", goal: "Goal!", over: "Full time" };
+  function drawQr(target, url) {
+    if (!target || typeof qrcode !== "function") return;
+    var qr = qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    target.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  }
+
+  // The strip under the table: a QR to watch, plus the code for anyone who wants to play.
+  function fillWatchStrip(code) {
+    var watchUrl = location.origin + location.pathname + "?watch=" + code;
+    drawQr(document.getElementById("qr-watch"), watchUrl);
+    document.getElementById("foot-watch-url").textContent = watchUrl.replace(/^https?:\/\//, "");
+    document.getElementById("foot-code").textContent = code;
+  }
+
+  var PHASE_LABELS ={ lobby: "Lobby · warm-up", countdown: "Get ready", play: "Live", goal: "Goal!", over: "Full time" };
 
   return {
     W: W, H: H, M: M, GOAL_H: GOAL_H, GOAL_TOP: GOAL_TOP, GOAL_BOT: GOAL_BOT,
     BALL_R: BALL_R, MAN_W: MAN_W, MAN_H: MAN_H, COLORS: COLORS, PHASE_LABELS: PHASE_LABELS,
     rodLayout: rodLayout, manY: manY, createView: createView, sound: sound,
-    showBanner: showBanner, toggleFullscreen: toggleFullscreen
+    showBanner: showBanner, toggleFullscreen: toggleFullscreen,
+    drawQr: drawQr, fillWatchStrip: fillWatchStrip
   };
 })();

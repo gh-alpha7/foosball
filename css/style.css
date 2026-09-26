@@ -412,3 +412,21 @@ button.pad-rods:hover { color: var(--text); }
   .rod-btn { min-height: 0; }
   .pick-play { height: 46px; font-size: 16px; }
 }
+
+/* ---------- watch QR strip under the table ---------- */
+.host-foot {
+  display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+  padding: 8px 170px 0 4px;              /* right side stays clear for the tool buttons */
+}
+.qr.qr-sm { width: 84px; height: 84px; padding: 6px; border-radius: 10px; flex-shrink: 0; }
+.qr.qr-xs { width: 64px; height: 64px; padding: 5px; border-radius: 8px; flex-shrink: 0; }
+.foot-text { min-width: 0; }
+.foot-title { margin: 0; font-weight: 800; font-size: 18px; }
+.foot-url { margin: 2px 0 0; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.foot-join { margin-left: 18px; padding-left: 18px; border-left: 1px solid var(--line); }
+.foot-code { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: .14em; color: var(--gold); line-height: 1.1; }
+.watch-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.watch-row .watch-line { margin: 0; }
+/* short screens (phones in landscape): keep the table as big as possible */
+@media (max-height: 560px) { .host-foot { display: none; } }
+@media (max-width: 720px) { .host-foot { padding-right: 110px; } .foot-join { display: none; } }
