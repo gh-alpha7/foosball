@@ -416,7 +416,7 @@ button.pad-rods:hover { color: var(--text); }
 /* ---------- watch QR strip under the table ---------- */
 .host-foot {
   display: flex; align-items: center; gap: 14px; flex-shrink: 0;
-  padding: 8px 170px 0 4px;              /* right side stays clear for the tool buttons */
+  padding: 8px 260px 0 4px;              /* right side stays clear for the tool buttons */
 }
 .qr.qr-sm { width: 84px; height: 84px; padding: 6px; border-radius: 10px; flex-shrink: 0; }
 .qr.qr-xs { width: 64px; height: 64px; padding: 5px; border-radius: 8px; flex-shrink: 0; }
@@ -430,3 +430,8 @@ button.pad-rods:hover { color: var(--text); }
 /* short screens (phones in landscape): keep the table as big as possible */
 @media (max-height: 560px) { .host-foot { display: none; } }
 @media (max-width: 720px) { .host-foot { padding-right: 110px; } .foot-join { display: none; } }
+
+/* ---------- project like button (js/likes.js) ---------- */
+.home-like { display: flex; justify-content: center; margin-top: -6px; }
+.host-tools { align-items: center; }
+.host-tools .lk-like { height: 42px; border-radius: 12px; }
