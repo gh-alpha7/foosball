@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=2" />
+  <link rel="stylesheet" href="css/style.css?v=3" />
 </head>
 <body>
 
@@ -29,10 +29,14 @@
       </button>
 
       <form class="join-form" id="join-form" autocomplete="off">
-        <label for="join-code">Joining from a phone?</label>
+        <label for="join-code">Got a room code?</label>
         <div class="join-row">
           <input id="join-code" name="code" inputmode="text" maxlength="4" placeholder="CODE" autocapitalize="characters" spellcheck="false" />
-          <button class="btn" type="submit">Join</button>
+          <button class="btn" type="submit">Play</button>
+          <button class="btn" type="button" id="btn-watch">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            Watch
+          </button>
         </div>
       </form>
 
@@ -54,7 +58,7 @@
       </div>
       <div class="scorebar-mid">
         <span class="phase" id="phase-label">Waiting for players</span>
-        <span class="to-win mono">first to <span id="goal-target">5</span></span>
+        <span class="to-win mono">first to <span id="goal-target">5</span><span id="watch-count"></span></span>
       </div>
       <div class="team-score blue">
         <span class="score" id="score-blue">0</span>
@@ -66,6 +70,7 @@
     <div class="table-wrap" id="table-wrap">
       <canvas id="table" aria-label="Foosball table"></canvas>
       <div class="banner" id="banner" hidden></div>
+      <div class="spec-pill" id="spec-pill" hidden></div>
     </div>
 
     <!-- lobby overlay -->
@@ -79,6 +84,7 @@
             <p class="mono dim">room code</p>
             <p class="room-code" id="room-code">····</p>
             <p class="net-status" id="net-status"><span class="dot"></span> connecting…</p>
+            <p class="watch-line" id="watch-line"></p>
           </div>
         </div>
         <div class="lobby-teams">
@@ -136,6 +142,7 @@
         </button>
       </div>
       <p class="pad-status" id="pad-status"><span class="dot"></span> connecting to table…</p>
+      <a class="watch-link" id="pad-watch" href="#">Just watch instead →</a>
     </section>
 
     <!-- step 2: the controller itself -->
@@ -183,9 +190,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-  <script src="js/shared.js?v=2"></script>
-  <script src="js/host.js?v=2"></script>
-  <script src="js/controller.js?v=2"></script>
-  <script src="js/app.js?v=2"></script>
+  <script src="js/shared.js?v=3"></script>
+  <script src="js/table.js?v=3"></script>
+  <script src="js/host.js?v=3"></script>
+  <script src="js/spectator.js?v=3"></script>
+  <script src="js/controller.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
 </body>
 </html>

@@ -58,6 +58,10 @@ var Controller = (function () {
     document.querySelectorAll(".team-btn").forEach(function (b) {
       b.addEventListener("click", function () { pickTeam(b.dataset.team); });
     });
+    var watchLink = document.getElementById("pad-watch");
+    watchLink.href = "?watch=" + code;
+    watchLink.addEventListener("click", function () { send({ t: "bye" }); });
+
     document.getElementById("pad-switch").addEventListener("click", function () {
       el.pad.hidden = true;
       el.join.hidden = false;

@@ -25,6 +25,19 @@ Rods are shared out automatically within each team:
 | 3 | goalie + defence / midfield / attack |
 | 4+ | one rod each, extras double up from midfield |
 
+## Spectating
+
+Anyone can watch a live match on their own screen, on a phone, tablet or another TV:
+
+- open the site, type the room code and press **Watch**, or
+- open `https://gh-alpha7.github.io/foosball/?watch=CODE` (the host lobby shows this link), or
+- on the phone join screen, tap **Just watch instead**.
+
+Spectators see the live table, scores, names and goal banners, with sound after a
+tap. The host shows how many people are watching.
+
+## Teams and bots
+
 A team with nobody on it is played by a bot, so you can also play 1 vs bot.
 People can join, leave or switch teams mid-match. A phone that drops out keeps its
 place for 30 seconds, so reloading or a sleeping screen doesn't lose the slot.
@@ -38,13 +51,18 @@ place for 30 seconds, so reloading or a sleeping screen doesn't lose the slot.
   [PeerJS](https://peerjs.com/). Its free public broker is only used for the
   initial handshake. After that the traffic goes device to device, over local
   Wi-Fi when everyone is on the same network.
+- Spectators connect the same way but only receive: about 30 small snapshots a
+  second (ball, rod positions, foot swings, sounds) plus a message whenever the
+  score, names, phase or banner changes.
 - Both sides send a heartbeat every second or two, because WebRTC close events
   are unreliable. The host frees a player's rods after 5 seconds of silence.
 
 | File | What it does |
 | --- | --- |
 | `js/shared.js` | Constants, rod layout, how rods are split among teammates |
-| `js/host.js` | Room, players, physics, bots, rendering, sound |
+| `js/table.js` | Table geometry, canvas renderer and sound, shared by host and spectators |
+| `js/host.js` | Room, players, physics, bots; streams snapshots to spectators |
+| `js/spectator.js` | Read-only view: buffers snapshots and draws the table about 90 ms behind, interpolating between them |
 | `js/controller.js` | Phone controller: join, team pick, slider, kick, haptics |
 | `js/app.js` | Chooses host / controller / home view from the URL |
 

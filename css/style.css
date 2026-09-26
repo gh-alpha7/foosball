@@ -321,3 +321,29 @@ h1 { margin: 0; font-size: clamp(40px, 9vw, 56px); line-height: 1; font-weight: 
 @media (prefers-reduced-motion: reduce) {
   .rotate svg, .shoot.fire .shoot-man, .shoot.fire .shoot-ball { animation: none; }
 }
+
+/* ---------- spectators ---------- */
+.join-row .btn { padding: 0 16px; }
+.join-row .btn svg { width: 18px; height: 18px; }
+.watch-line { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
+.watch-line b { color: var(--text); font-family: var(--mono); font-weight: 600; }
+.watch-line .watchers { margin-left: 8px; color: var(--gold); white-space: nowrap; }
+.watch-link { align-self: center; color: var(--muted); font-size: 14px; text-decoration: none; padding: 6px 10px; border-radius: 8px; }
+.watch-link:hover, .watch-link:focus-visible { color: var(--text); background: var(--surface); }
+
+.spec-pill {
+  position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
+  max-width: calc(100% - 24px); padding: 7px 14px; border-radius: 999px; pointer-events: none;
+  background: rgba(8, 14, 11, .78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--line); color: var(--muted); font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.spec-pill.ok { color: var(--text); }
+.spec-pill.err { color: var(--red); }
+.view-host.spectating { padding-bottom: 14px; }
+@media (max-width: 720px) {
+  .view-host { padding: 10px 10px 12px; gap: 10px; }
+  .team-name { font-size: 18px; }
+  .scorebar { gap: 8px; }
+  .to-win { display: none; }
+}
