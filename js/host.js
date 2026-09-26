@@ -14,6 +14,7 @@ var Host = (function () {
   var view;
   var peer, code, joinUrl, watchUrl;
   var players = {};          // pid -> { pid, name, team, conn, connected, roles, p, pull, leftAt, lastSeen }
+  var claims = { red: {}, blue: {} };   // team -> role -> pid (kept while a player is briefly away)
   var spectators = [];       // { conn, lastSeen }
   var rods, ball, trail = [];
   var score = { red: 0, blue: 0 }, target = 5;
@@ -37,6 +38,8 @@ var Host = (function () {
       blueNames: document.getElementById("blue-names"),
       lobbyRed: document.getElementById("lobby-red"),
       lobbyBlue: document.getElementById("lobby-blue"),
+      redCount: document.getElementById("red-count"),
+      blueCount: document.getElementById("blue-count"),
       qr: document.getElementById("qr"),
       joinUrl: document.getElementById("join-url"),
       roomCode: document.getElementById("room-code"),
@@ -79,6 +82,9 @@ var Host = (function () {
         pump: function () { step(1 / 60); lastSnap = 0; streamToSpectators(performance.now()); }
       };
     }
+    // keep-alive on a timer, not the frame loop, so phones stay connected even if
+    // the host tab is briefly in the background (browsers pause animation frames there)
+    setInterval(function () { broadcast({ t: "ping" }); }, 2000);
     openRoom();
     renderLobby();
     renderWatchers();
@@ -265,9 +271,10 @@ var Host = (function () {
       p.connected = true;
       p.lastSeen = performance.now();
       p.name = cleanName(msg.name) || p.name || "Player";
-      if (msg.team === "red" || msg.team === "blue") p.team = msg.team;
-      assignRods();
       send(p, { t: "welcome", code: code });
+      // a reconnecting player keeps their team and rods; a new one asks for a team
+      if (!p.team && (msg.team === "red" || msg.team === "blue")) joinTeam(p, msg.team);
+      assignRods();
       return;
     }
     if (!p || p.conn !== conn) return;
@@ -280,7 +287,15 @@ var Host = (function () {
         dropConn(conn);
         break;
       case "team":
-        if (msg.team === "red" || msg.team === "blue") { p.team = msg.team; assignRods(); }
+        if ((msg.team === "red" || msg.team === "blue") && msg.team !== p.team) {
+          if (teamMembers(msg.team).length >= FB.MAX_PER_TEAM) { send(p, { t: "full", team: msg.team }); break; }
+          leaveTeam(p);
+          joinTeam(p, msg.team);
+          assignRods();
+        }
+        break;
+      case "rod":
+        toggleRod(p, msg.role, !!msg.take);
         break;
       case "name":
         p.name = cleanName(msg.name) || p.name;
@@ -300,10 +315,82 @@ var Host = (function () {
         });
         break;
       case "leave":
+        leaveTeam(p);
         delete players[p.pid];
         assignRods();
         break;
     }
+  }
+
+  /* ---------- teams and rod claims ---------- */
+  // everyone on a team, including players who are briefly disconnected
+  function teamMembers(team) {
+    return Object.keys(players).map(function (k) { return players[k]; })
+      .filter(function (p) { return p.team === team; });
+  }
+  function rolesOf(pid, team) {
+    return FB.ROLE_ORDER.filter(function (r) { return claims[team][r] === pid; });
+  }
+
+  // New arrivals take any free rods. If none are free they take the back half of
+  // the rods held by the teammate with the most, so 1 player has all 4 and a second
+  // player splits them 2/2. With four players holding one rod each the team is full.
+  function joinTeam(p, team) {
+    if (teamMembers(team).length >= FB.MAX_PER_TEAM) { send(p, { t: "full", team: team }); return false; }
+    p.team = team;
+    var free = FB.ROLE_ORDER.filter(function (r) { return !claims[team][r]; });
+    if (!free.length) {
+      var donor = null, most = 1;
+      teamMembers(team).forEach(function (m) {
+        var n = rolesOf(m.pid, team).length;
+        if (m !== p && n > most) { most = n; donor = m; }
+      });
+      if (donor) free = rolesOf(donor.pid, team).slice(Math.ceil(most / 2));
+    }
+    free.forEach(function (r) { claims[team][r] = p.pid; });
+    return true;
+  }
+
+  // Rods freed by someone leaving go to the teammate with the fewest rods, so the
+  // bot only plays when a team is empty or a rod was deliberately left free.
+  function leaveTeam(p) {
+    var team = p.team;
+    if (!team) return;
+    var freed = rolesOf(p.pid, team);
+    freed.forEach(function (r) { delete claims[team][r]; });
+    p.team = null;
+    var mates = teamMembers(team);
+    freed.forEach(function (r) {
+      if (!mates.length) return;
+      mates.sort(function (a, b) { return rolesOf(a.pid, team).length - rolesOf(b.pid, team).length; });
+      claims[team][r] = mates[0].pid;
+    });
+  }
+
+  // take a free rod, or hand one of yours to the bot (you always keep at least one)
+  function toggleRod(p, role, take) {
+    var team = p.team;
+    if (!team || FB.ROLE_ORDER.indexOf(role) === -1) return;
+    var owner = claims[team][role];
+    if (take) {
+      if (owner && owner !== p.pid) {
+        send(p, { t: "event", kind: "taken", role: role, by: players[owner] ? players[owner].name : "someone" });
+        return;
+      }
+      claims[team][role] = p.pid;
+    } else if (owner === p.pid && rolesOf(p.pid, team).length > 1) {
+      delete claims[team][role];
+    }
+    assignRods();
+  }
+
+  function claimsView(team) {
+    var out = {};
+    FB.ROLE_ORDER.forEach(function (r) {
+      var pid = claims[team][r], p = pid && players[pid];
+      out[r] = p ? { pid: pid, name: p.name, away: !p.connected } : null;
+    });
+    return out;
   }
 
   function cleanName(s) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, 12); }
@@ -322,27 +409,19 @@ var Host = (function () {
       .sort(function (a, b) { return a.joinedAt - b.joinedAt; });
   }
 
-  // Split each team's rods among its connected players; empty rods go to the bot.
+  // Apply the claims to the table: a claimed rod follows its player while they're
+  // connected; free rods and rods of players who are briefly away go to the bot.
   function assignRods() {
-    rods.forEach(function (r) { r.owners = []; });
-    ["red", "blue"].forEach(function (team) {
-      var list = teamList(team);
-      var split = FB.splitRoles(list.length);
-      list.forEach(function (p, i) {
-        p.roles = split[i] || [];
-        rods.forEach(function (r) {
-          if (r.team === team && p.roles.indexOf(r.role) !== -1) r.owners.push(p.pid);
-        });
-      });
+    rods.forEach(function (r) {
+      var pid = claims[r.team][r.role], p = pid && players[pid];
+      r.owners = p && p.connected ? [pid] : [];
+      r.human = r.owners.length > 0;
+      r.label = r.human ? p.name : "BOT";
     });
     Object.keys(players).forEach(function (k) {
       var p = players[k];
-      if (!p.team || !p.connected) p.roles = [];
+      p.roles = p.team ? rolesOf(p.pid, p.team) : [];
       send(p, { t: "you", team: p.team, roles: p.roles });
-    });
-    rods.forEach(function (r) {
-      r.human = r.owners.length > 0;
-      r.label = r.human ? r.owners.map(function (id) { return players[id].name; }).join(" / ") : "BOT";
     });
     renderLobby();
     broadcastLobby();
@@ -351,22 +430,30 @@ var Host = (function () {
   }
 
   function broadcastLobby() {
-    broadcast({ t: "lobby", red: teamList("red").map(pName), blue: teamList("blue").map(pName) });
+    broadcast({
+      t: "lobby",
+      red: teamList("red").map(pName), blue: teamList("blue").map(pName),
+      rods: { red: claimsView("red"), blue: claimsView("blue") },
+      full: { red: teamMembers("red").length >= FB.MAX_PER_TEAM, blue: teamMembers("blue").length >= FB.MAX_PER_TEAM }
+    });
   }
   function broadcastScore() {
     broadcast({ t: "score", red: score.red, blue: score.blue, phase: phase, target: target });
   }
 
+  // One slot per rod, in field order, showing who holds it
   function renderLobby() {
     ["red", "blue"].forEach(function (team) {
-      var list = teamList(team);
+      var view = claimsView(team);
       var ul = team === "red" ? el.lobbyRed : el.lobbyBlue;
-      ul.innerHTML = list.length
-        ? list.map(function (p) {
-            return "<li>" + FB.escapeHtml(p.name) + '<span class="rods">' + FB.describeRoles(p.roles) + "</span></li>";
-          }).join("")
-        : '<li class="empty">Bot will play</li>';
-      (team === "red" ? el.redNames : el.blueNames).textContent = list.map(pName).join(", ") || "bot";
+      ul.innerHTML = FB.ROLE_ORDER.map(function (r) {
+        var c = view[r];
+        var who = c ? FB.escapeHtml(c.name) + (c.away ? ' <span class="away">away</span>' : "") : '<span class="bot">bot</span>';
+        return '<li class="slot' + (c ? " taken" : "") + '"><span class="slot-role">' + FB.ROLE_SHORT[r] + "</span>" + who + "</li>";
+      }).join("");
+      var count = teamMembers(team).length;
+      (team === "red" ? el.redCount : el.blueCount).textContent = count + "/" + FB.MAX_PER_TEAM;
+      (team === "red" ? el.redNames : el.blueNames).textContent = teamList(team).map(pName).join(", ") || "bot";
     });
   }
 
@@ -497,10 +584,9 @@ var Host = (function () {
         dropConn(c);
         try { c.close(); } catch (e) { /* ignore */ }
       }
-      if (!p.connected && now - p.leftAt > 30000) { delete players[k]; assignRods(); }
+      if (!p.connected && now - p.leftAt > 30000) { leaveTeam(p); delete players[k]; assignRods(); }
     });
     spectators.slice().forEach(function (s) { if (now - s.lastSeen > 8000) removeSpectator(s); });
-    if (now - (step.lastPing || 0) > 2000) { step.lastPing = now; broadcast({ t: "ping" }); }
 
     rods.forEach(function (rod) { moveRod(rod, dt); });
 

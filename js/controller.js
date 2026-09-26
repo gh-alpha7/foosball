@@ -7,6 +7,7 @@ var Controller = (function () {
   var el = {};
   var pos = 0.5, pull = 0, lastSend = 0, sendTimer = null;
   var wakeLock = null;
+  var claims = { red: {}, blue: {} }, full = {}, myRoles = [];
 
   function start(roomCode) {
     code = FB.cleanCode(roomCode);
@@ -39,7 +40,12 @@ var Controller = (function () {
       shoot: document.getElementById("shoot"),
       shootHint: document.getElementById("shoot-hint"),
       shootPower: document.getElementById("shoot-power"),
-      msg: document.getElementById("pad-msg")
+      msg: document.getElementById("pad-msg"),
+      pick: document.getElementById("pad-pick"),
+      rodGrid: document.getElementById("rod-grid"),
+      pickSub: document.getElementById("pick-sub"),
+      pickHint: document.getElementById("pick-hint"),
+      pickPlay: document.getElementById("pick-play")
     };
     el.view.hidden = false;
     el.room.textContent = code;
@@ -62,9 +68,13 @@ var Controller = (function () {
     watchLink.href = "?watch=" + code;
     watchLink.addEventListener("click", function () { send({ t: "bye" }); });
 
-    document.getElementById("pad-switch").addEventListener("click", function () {
-      el.pad.hidden = true;
-      el.join.hidden = false;
+    document.getElementById("pad-switch").addEventListener("click", showJoin);
+    document.getElementById("pick-team").addEventListener("click", showJoin);
+    el.rods.addEventListener("click", showPick);
+    el.pickPlay.addEventListener("click", function () { goLandscape(); showPad(); });
+    el.rodGrid.addEventListener("click", function (e) {
+      var b = e.target.closest(".rod-btn");
+      if (b) tapRod(b.dataset.role);
     });
 
     bindMove();
@@ -155,21 +165,36 @@ var Controller = (function () {
       case "welcome":
         welcomed = true;
         setStatus("ok", "Connected. Pick a team.");
-        if (team) showPad();
+        // back from a reload mid-game: straight to the controller; otherwise choose rods first
+        if (team) { if (played()) showPad(); else if (!el.join.hidden) showPick(); }
         showMsg("");
         break;
       case "lobby":
-        el.countRed.textContent = plural(msg.red.length);
-        el.countBlue.textContent = plural(msg.blue.length);
+        if (msg.rods) claims = msg.rods;
+        full = msg.full || {};
+        teamButton("red", msg.red.length);
+        teamButton("blue", msg.blue.length);
+        renderPick();
         break;
       case "you":
+        myRoles = msg.roles || [];
         if (msg.team) {
           team = msg.team;
           el.pad.className = "pad " + team;
           updateShootHint();
           el.teamLabel.textContent = teamLabel();
-          el.rods.textContent = FB.describeRoles(msg.roles);
+          el.rods.textContent = FB.describeRoles(myRoles) + " ✎";
         }
+        renderPick();
+        break;
+      case "full":
+        if (msg.team === team || !team) {
+          team = null;
+          FB.store("fb-team-" + code, "");
+        }
+        showJoin();
+        setStatus("err", (msg.team === "red" ? "Red" : "Blue") + " is full (4 players, one per rod). Pick the other side or watch.");
+        FB.buzz(200);
         break;
       case "score":
         el.scoreRed.textContent = msg.red;
@@ -185,6 +210,7 @@ var Controller = (function () {
   function onEvent(msg) {
     var mine = msg.team === team;
     if (msg.kind === "hit") { FB.buzz(18); return; }
+    if (msg.kind === "taken") { pickHint(FB.ROLE_NAME[msg.role] + " is taken by " + msg.by + ".", true); return; }
     if (msg.kind === "start") { showMsg("Kick-off!"); FB.buzz([40, 60, 40]); return; }
     if (msg.kind === "goal") {
       showMsg(mine ? "GOAL! Nice one 🎉" : "Conceded. Shake it off");
@@ -213,20 +239,97 @@ var Controller = (function () {
     if (text) msgTimer = setTimeout(function () { el.msg.textContent = ""; }, 3500);
   }
 
-  /* ---------- team + pad ---------- */
+  /* ---------- team + rods + pad ---------- */
+  function teamButton(t, n) {
+    var isFull = !!full[t] && team !== t;
+    var btn = document.querySelector('.team-btn[data-team="' + t + '"]');
+    btn.disabled = isFull;
+    (t === "red" ? el.countRed : el.countBlue).textContent = isFull ? "Full · 4/4" : plural(n) + " · " + n + "/4";
+  }
+
   function pickTeam(t) {
+    if (full[t] && team !== t) { setStatus("err", (t === "red" ? "Red" : "Blue") + " is full. Pick the other side or watch."); return; }
     team = t;
     FB.store("fb-team-" + code, t);
     if (!name) { name = "Player"; }
     send({ t: "name", name: name });   // no-op until connected; hello carries the team then
     send({ t: "team", team: t });
-    goLandscape();
-    showPad();
+    showPick();
+  }
+
+  function played() {
+    try { return sessionStorage.getItem("fb-played-" + code) === "1"; } catch (e) { return false; }
+  }
+
+  function showJoin() {
+    el.pad.hidden = true;
+    el.pick.hidden = true;
+    el.join.hidden = false;
+  }
+
+  function showPick() {
+    el.join.hidden = true;
+    el.pad.hidden = true;
+    el.pick.hidden = false;
+    el.pickPlay.textContent = played() ? "Back to the game ▶" : "Play ▶";
+    renderPick();
+  }
+
+  // The team's four rods in the order they sit on the big screen,
+  // so Blue's goalie is on the right like on the TV.
+  function renderPick() {
+    if (!team || el.pick.hidden) return;
+    el.pick.className = "pad-pick " + team;
+    var tc = claims[team] || {};
+    var order = team === "blue" ? FB.ROLE_ORDER.slice().reverse() : FB.ROLE_ORDER;
+    el.rodGrid.innerHTML = order.map(function (r) {
+      var c = tc[r];
+      var mine = c && c.pid === pid;
+      var state = mine ? "mine" : c ? "taken" : "free";
+      var who = mine ? "You" : c ? FB.escapeHtml(c.name) + (c.away ? " (away)" : "") : "Free · bot";
+      var men = "";
+      for (var i = 0; i < FB.ROLE_MEN[r]; i++) men += "<i></i>";
+      return '<button class="rod-btn ' + state + '" type="button" data-role="' + r + '" aria-pressed="' + !!mine + '">' +
+        '<span class="rod-art" aria-hidden="true"><span class="rod-bar"></span><span class="rod-men">' + men + "</span></span>" +
+        '<span class="rod-name">' + FB.ROLE_NAME[r] + "</span>" +
+        '<span class="rod-owner">' + who + "</span></button>";
+    }).join("");
+    el.pickSub.textContent = (team === "red" ? "Red" : "Blue") + " · " + FB.describeRoles(myRoles);
+    el.pickPlay.disabled = !myRoles.length;
+  }
+
+  function tapRod(role) {
+    var c = (claims[team] || {})[role];
+    if (c && c.pid === pid) {
+      if (myRoles.length <= 1) { pickHint("You need at least one rod.", true); return; }
+      send({ t: "rod", role: role, take: false });
+      FB.buzz(10);
+    } else if (c) {
+      pickHint(FB.ROLE_NAME[role] + " is taken by " + c.name + ".", true);
+    } else {
+      send({ t: "rod", role: role, take: true });
+      FB.buzz(15);
+    }
+  }
+
+  var hintTimer = null;
+  function pickHint(text, warn) {
+    clearTimeout(hintTimer);
+    el.pickHint.textContent = text;
+    el.pickHint.classList.toggle("warn", !!warn);
+    if (warn) FB.buzz([30, 40, 30]);
+    hintTimer = setTimeout(function () {
+      el.pickHint.textContent = "Tap a free rod to take it. Tap one of yours to give it to the bot.";
+      el.pickHint.classList.remove("warn");
+    }, 2600);
   }
 
   function showPad() {
     el.join.hidden = true;
+    el.pick.hidden = true;
     el.pad.hidden = false;
+    el.pad.dataset.played = "1";
+    try { sessionStorage.setItem("fb-played-" + code, "1"); } catch (e) { /* ignore */ }
     el.pad.className = "pad " + (team || "red");
     updateShootHint();
     placeThumb();

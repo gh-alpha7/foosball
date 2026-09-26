@@ -18,26 +18,19 @@ var FB = (function () {
     { team: "blue", role: "defense",  men: 2 },
     { team: "blue", role: "goalie",   men: 1 }
   ];
+  // Each team has one rod per role, and each rod has at most one player,
+  // so a team holds at most four players.
   var ROLE_ORDER = ["goalie", "defense", "midfield", "attack"];
   var ROLE_SHORT = { goalie: "GK", defense: "DEF", midfield: "MID", attack: "ATT" };
-
-  // How a team's four rods are split among its players.
-  function splitRoles(n) {
-    if (n <= 0) return [];
-    if (n === 1) return [ROLE_ORDER.slice()];
-    if (n === 2) return [["goalie", "defense"], ["midfield", "attack"]];
-    if (n === 3) return [["goalie", "defense"], ["midfield"], ["attack"]];
-    // 4+: one rod each, extra players double up starting from the midfield
-    var out = ROLE_ORDER.map(function (r) { return [r]; });
-    var extra = ["midfield", "attack", "defense", "goalie"];
-    for (var i = 4; i < n; i++) out.push([extra[(i - 4) % 4]]);
-    return out;
-  }
+  var ROLE_NAME = { goalie: "Goalie", defense: "Defence", midfield: "Midfield", attack: "Attack" };
+  var ROLE_MEN = { goalie: 1, defense: 2, midfield: 5, attack: 3 };
+  var MAX_PER_TEAM = 4;
 
   function describeRoles(roles) {
-    if (!roles || !roles.length) return "spectating";
+    if (!roles || !roles.length) return "no rods";
     if (roles.length === 4) return "all rods";
-    return roles.map(function (r) { return ROLE_SHORT[r]; }).join(" + ");
+    return ROLE_ORDER.filter(function (r) { return roles.indexOf(r) !== -1; })
+      .map(function (r) { return ROLE_SHORT[r]; }).join(" + ");
   }
 
   function makeCode() {
@@ -80,8 +73,9 @@ var FB = (function () {
   }
 
   return {
-    PEER_PREFIX: PEER_PREFIX, RODS: RODS, ROLE_ORDER: ROLE_ORDER,
-    splitRoles: splitRoles, describeRoles: describeRoles,
+    PEER_PREFIX: PEER_PREFIX, RODS: RODS, ROLE_ORDER: ROLE_ORDER, ROLE_SHORT: ROLE_SHORT,
+    ROLE_NAME: ROLE_NAME, ROLE_MEN: ROLE_MEN, MAX_PER_TEAM: MAX_PER_TEAM,
+    describeRoles: describeRoles,
     makeCode: makeCode, cleanCode: cleanCode, uid: uid, store: store, buzz: buzz,
     peerOptions: peerOptions, escapeHtml: escapeHtml
   };

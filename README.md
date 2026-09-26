@@ -9,21 +9,25 @@ table, and everyone plays with their phone (iPhone or Android) as the controller
 
 1. On the big screen, open the site and choose **Host on this screen**.
 2. Everyone scans the QR code (or opens the link and types the 4-letter code).
-3. Enter a name and pick **Red** or **Blue**.
+3. Enter a name, pick **Red** or **Blue**, then pick your rods.
 4. Turn the phone sideways. The **right half** moves your rods: drag up and down.
    The **left half** shoots: pull your thumb back, then push it forward (or let go).
    The further you pull, the harder the shot, and a quick tap is a soft touch.
    Red pulls left and pushes right; Blue is mirrored to match the big screen.
 5. The host presses **Start match**. First to 5 goals wins (3, 7 and 10 are also options).
 
-Rods are shared out automatically within each team:
+## Picking rods
 
-| Players on a team | Split |
-| --- | --- |
-| 1 | all four rods |
-| 2 | goalie + defence / midfield + attack |
-| 3 | goalie + defence / midfield / attack |
-| 4+ | one rod each, extras double up from midfield |
+Each team has four rods: goalie, defence, midfield and attack. **Each rod has at
+most one player, so a team holds up to 4 players.** After choosing a team you get
+a rod picker: tap a free rod to take it, or tap one of yours to hand it to the bot
+(you always keep at least one). Reopen the picker any time from the rods button on
+the controller.
+
+Everyone starts with a sensible default. A new player takes any free rods, or
+otherwise the back half of the rods held by the teammate with the most. So one
+player starts with all four and two players start 2 + 2, and anyone can change
+that. A full team shows **Full** and can't be joined; join the other side or watch.
 
 ## Spectating
 
@@ -38,9 +42,11 @@ tap. The host shows how many people are watching.
 
 ## Teams and bots
 
-A team with nobody on it is played by a bot, so you can also play 1 vs bot.
-People can join, leave or switch teams mid-match. A phone that drops out keeps its
-place for 30 seconds, so reloading or a sleeping screen doesn't lose the slot.
+The bot plays any rod without a player, so an empty team is all bot and you can
+play 1 vs bot. People can join, leave or switch teams mid-match. A phone that drops
+out keeps its rods for 30 seconds (the bot covers them meanwhile), so reloading or
+a sleeping screen doesn't lose them. After that, or when a player switches team,
+their rods go to the teammate with the fewest.
 
 ## How it works
 

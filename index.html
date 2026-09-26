@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=3" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
 
@@ -89,12 +89,12 @@
         </div>
         <div class="lobby-teams">
           <div class="lobby-team red">
-            <h2>Red</h2>
-            <ul id="lobby-red"><li class="empty">Bot will play</li></ul>
+            <h2>Red <span class="team-count mono" id="red-count">0/4</span></h2>
+            <ul class="slots" id="lobby-red"></ul>
           </div>
           <div class="lobby-team blue">
-            <h2>Blue</h2>
-            <ul id="lobby-blue"><li class="empty">Bot will play</li></ul>
+            <h2>Blue <span class="team-count mono" id="blue-count">0/4</span></h2>
+            <ul class="slots" id="lobby-blue"></ul>
           </div>
         </div>
         <div class="lobby-actions">
@@ -106,7 +106,7 @@
           </label>
           <button class="btn btn-primary btn-lg" id="btn-start" type="button">Start match</button>
         </div>
-        <p class="hint">Empty team? A bot fills in. Players can join or switch teams any time.</p>
+        <p class="hint">Up to 4 players a team, one per rod. Players pick their rods on their phone, and the bot plays any free rod.</p>
       </div>
     </section>
 
@@ -145,13 +145,27 @@
       <a class="watch-link" id="pad-watch" href="#">Just watch instead →</a>
     </section>
 
-    <!-- step 2: the controller itself -->
+    <!-- step 2: pick rods (one player per rod, max 4 a team) -->
+    <section class="pad-pick" id="pad-pick" hidden>
+      <header class="pick-top">
+        <button class="chip" id="pick-team" type="button" aria-label="Switch team">⇄</button>
+        <div>
+          <h2>Pick your rods</h2>
+          <p class="mono dim" id="pick-sub">Red · all rods</p>
+        </div>
+      </header>
+      <div class="rod-grid" id="rod-grid"></div>
+      <p class="pick-hint" id="pick-hint">Tap a free rod to take it. Tap one of yours to give it to the bot.</p>
+      <button class="btn btn-primary btn-lg pick-play" id="pick-play" type="button">Play ▶</button>
+    </section>
+
+    <!-- step 3: the controller itself -->
     <section class="pad" id="pad" hidden>
       <header class="pad-top">
         <button class="chip" id="pad-switch" type="button" aria-label="Switch team">⇄</button>
         <div class="pad-me">
           <span class="pad-team" id="pad-team">Red</span>
-          <span class="pad-rods mono" id="pad-rods">all rods</span>
+          <button class="pad-rods mono" id="pad-rods" type="button" aria-label="Change rods">all rods ✎</button>
         </div>
         <div class="pad-score mono"><span class="r" id="pad-score-red">0</span>–<span class="b" id="pad-score-blue">0</span></div>
       </header>
@@ -190,11 +204,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-  <script src="js/shared.js?v=3"></script>
-  <script src="js/table.js?v=3"></script>
-  <script src="js/host.js?v=3"></script>
-  <script src="js/spectator.js?v=3"></script>
-  <script src="js/controller.js?v=3"></script>
-  <script src="js/app.js?v=3"></script>
+  <script src="js/shared.js?v=4"></script>
+  <script src="js/table.js?v=4"></script>
+  <script src="js/host.js?v=4"></script>
+  <script src="js/spectator.js?v=4"></script>
+  <script src="js/controller.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>
