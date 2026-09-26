@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Foosball Party</title>
+  <meta name="description" content="Multiplayer foosball. A laptop or TV shows the table and everyone plays with their phone as the controller." />
+  <meta name="theme-color" content="#0b1410" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314532d'/%3E%3Ccircle cx='32' cy='32' r='13' fill='%23fff'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css?v=1" />
+</head>
+<body>
+
+  <!-- ============ HOME ============ -->
+  <main class="view view-home" id="view-home" hidden>
+    <div class="home-card">
+      <div class="logo" aria-hidden="true"><span class="logo-ball"></span></div>
+      <h1>Foosball <span class="accent">Party</span></h1>
+      <p class="lede">One big screen shows the table. Everyone else grabs a phone, scans the code and picks a team.</p>
+
+      <button class="btn btn-primary btn-lg" id="btn-host" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Host on this screen
+      </button>
+
+      <form class="join-form" id="join-form" autocomplete="off">
+        <label for="join-code">Joining from a phone?</label>
+        <div class="join-row">
+          <input id="join-code" name="code" inputmode="text" maxlength="4" placeholder="CODE" autocapitalize="characters" spellcheck="false" />
+          <button class="btn" type="submit">Join</button>
+        </div>
+      </form>
+
+      <ol class="how">
+        <li><b>Host</b> on a laptop or TV browser.</li>
+        <li><b>Scan</b> the QR code with each phone.</li>
+        <li><b>Slide</b> to move your rods, <b>tap</b> to kick.</li>
+      </ol>
+    </div>
+  </main>
+
+  <!-- ============ HOST (big screen) ============ -->
+  <main class="view view-host" id="view-host" hidden>
+    <header class="scorebar">
+      <div class="team-score red">
+        <span class="team-name">Red</span>
+        <span class="team-players" id="red-names"></span>
+        <span class="score" id="score-red">0</span>
+      </div>
+      <div class="scorebar-mid">
+        <span class="phase" id="phase-label">Waiting for players</span>
+        <span class="to-win mono">first to <span id="goal-target">5</span></span>
+      </div>
+      <div class="team-score blue">
+        <span class="score" id="score-blue">0</span>
+        <span class="team-players" id="blue-names"></span>
+        <span class="team-name">Blue</span>
+      </div>
+    </header>
+
+    <div class="table-wrap" id="table-wrap">
+      <canvas id="table" aria-label="Foosball table"></canvas>
+      <div class="banner" id="banner" hidden></div>
+    </div>
+
+    <!-- lobby overlay -->
+    <section class="lobby" id="lobby">
+      <div class="lobby-card">
+        <div class="lobby-join">
+          <div class="qr" id="qr" aria-label="QR code to join"></div>
+          <div>
+            <p class="mono dim">scan or open</p>
+            <p class="join-url" id="join-url">…</p>
+            <p class="mono dim">room code</p>
+            <p class="room-code" id="room-code">····</p>
+            <p class="net-status" id="net-status"><span class="dot"></span> connecting…</p>
+          </div>
+        </div>
+        <div class="lobby-teams">
+          <div class="lobby-team red">
+            <h2>Red</h2>
+            <ul id="lobby-red"><li class="empty">Bot will play</li></ul>
+          </div>
+          <div class="lobby-team blue">
+            <h2>Blue</h2>
+            <ul id="lobby-blue"><li class="empty">Bot will play</li></ul>
+          </div>
+        </div>
+        <div class="lobby-actions">
+          <label class="target">
+            Goals to win
+            <select id="target-select">
+              <option>3</option><option selected>5</option><option>7</option><option>10</option>
+            </select>
+          </label>
+          <button class="btn btn-primary btn-lg" id="btn-start" type="button">Start match</button>
+        </div>
+        <p class="hint">Empty team? A bot fills in. Players can join or switch teams any time.</p>
+      </div>
+    </section>
+
+    <div class="host-tools">
+      <button class="icon-btn" id="btn-lobby" type="button" title="Back to lobby" aria-label="Back to lobby">
+        <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-sound" type="button" title="Sound" aria-label="Toggle sound" aria-pressed="true">
+        <svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-full" type="button" title="Fullscreen" aria-label="Fullscreen">
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+  </main>
+
+  <!-- ============ CONTROLLER (phone) ============ -->
+  <main class="view view-pad" id="view-pad" hidden>
+    <!-- step 1: name + team -->
+    <section class="pad-join" id="pad-join">
+      <p class="mono dim">room <span id="pad-room">····</span></p>
+      <h1>Pick your side</h1>
+      <label class="field">
+        <span>Your name</span>
+        <input id="pad-name" maxlength="12" placeholder="Player" autocomplete="nickname" />
+      </label>
+      <div class="team-pick">
+        <button class="team-btn red" type="button" data-team="red">
+          <span class="team-btn-name">Red</span><span class="team-btn-count" id="count-red">0 players</span>
+        </button>
+        <button class="team-btn blue" type="button" data-team="blue">
+          <span class="team-btn-name">Blue</span><span class="team-btn-count" id="count-blue">0 players</span>
+        </button>
+      </div>
+      <p class="pad-status" id="pad-status"><span class="dot"></span> connecting to table…</p>
+    </section>
+
+    <!-- step 2: the controller itself -->
+    <section class="pad" id="pad" hidden>
+      <header class="pad-top">
+        <button class="chip" id="pad-switch" type="button" aria-label="Switch team">⇄</button>
+        <div class="pad-me">
+          <span class="pad-team" id="pad-team">Red</span>
+          <span class="pad-rods mono" id="pad-rods">all rods</span>
+        </div>
+        <div class="pad-score mono"><span class="r" id="pad-score-red">0</span>–<span class="b" id="pad-score-blue">0</span></div>
+      </header>
+      <div class="pad-body">
+        <div class="slider" id="slider" aria-label="Slide up and down to move your rods">
+          <div class="slider-track">
+            <div class="slider-rod"></div>
+            <div class="slider-thumb" id="slider-thumb"><span></span><span></span><span></span></div>
+          </div>
+          <p class="slider-hint mono">slide</p>
+        </div>
+        <button class="kick" id="kick" type="button" aria-label="Kick">
+          <span class="kick-ring"></span>
+          <span class="kick-label">KICK</span>
+        </button>
+      </div>
+      <p class="pad-msg" id="pad-msg"></p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="js/shared.js?v=1"></script>
+  <script src="js/host.js?v=1"></script>
+  <script src="js/controller.js?v=1"></script>
+  <script src="js/app.js?v=1"></script>
+</body>
+</html>
